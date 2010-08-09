@@ -1,0 +1,66 @@
+<div class="wrap">
+	<?php if ( array_key_exists('execute', $_GET) ): 
+		$id = $_GET['execute'];
+	?>
+		<h2><?php echo __('Executing Upgrade: '), $id ?></h2>
+	<?php 
+		$versions = $this->available_upgrades();
+		$versions = array_keys($versions);
+		if ( !in_array($id, $versions) ) {
+			wp_die( __("$id is not a valid version upgrade") );						
+		}
+		
+		$this->execute($id);
+	?>
+		<p><?php echo __('Execution complete!')?></p>
+	<?php endif; ?>
+	
+	<h2><?php echo __('Available Upgrades')?></h2>
+	<table class="widefat">
+		<thead>
+			<tr>
+				<th class="version"><?php echo __('Version') ?></th>
+				<th class="changelog"><?php echo __('Changelog') ?></th>
+				<th class="before-upgrade"><?php echo __('Verify before upgrade') ?></th>
+				<th class="upgrade"><?php echo __('Upgrade') ?></th>
+				<th class="after-upgrade"><?php echo __('Test after upgrade') ?></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php foreach ($this->available_upgrades() as $id => $info): 
+				$next = $id === $this->next_upgrade();
+			?>
+				<tr>
+					<td class="version"><?php echo $id ?></td>
+					<td class="changelog"><?php 
+						if ( $info['changelog'] ) : ?>
+							<ol>
+							<?php foreach ( explode("\n", $info['changelog']) as $item ) : ?>
+								<li><?php echo $item; ?></li>
+							<?php endforeach; ?>
+							</ol>
+						<?php else:
+							echo __('Not specified.');
+						endif; ?>
+					</td>
+					
+					<?php if ( $next ) : ?>
+					<td class="before-upgrade">
+						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=before") ?>"><?php echo __('Execute') ?></a>
+					</td>
+					<td class="upgrade">
+						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=upgrade") ?>"><?php echo __('Execute') ?></a>
+					</td>
+					<td class="after-upgrade">
+						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=after") ?>"><?php echo __('Execute') ?></a>
+					</td>
+					<?php else: ?>
+						<td class="unavailable" colspan="3">
+						<?php echo __('Pending'); ?>
+						</td>
+					<?php endif; ?>
+				</tr>
+			<?php endforeach; ?>
+		</tbody>
+	</table>		
+</div>

@@ -1,0 +1,10 @@
+<div class="theme">
+	<label>{{ 'Switch theme:' | l }}
+		<select name="theme">
+			<option value="0" selected="yes">{{ 'Do not switch theme' | l }}</option>		
+			{% for name, theme in themes %}
+			<option value="{{ name }}">{{ name }}</option>
+			{% endfor %}
+		</select>
+	</label>
+</div>

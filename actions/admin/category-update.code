@@ -1,0 +1,5 @@
+# Update Category: {{ name }}
+$upgrade->verify('category_exists', '{{ id }}') && $upgrade->add('category_update', <<<VALUE
+{{ value }}
+VALUE, 'Updated category: {{ name }}');
+

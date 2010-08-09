@@ -1,0 +1,10 @@
+<ul id="options">
+{% for option in options %}
+	<li>
+		<label for="option_{{ option }}">
+			<input type="checkbox" name="options[]" id="option_{{ option }}" value="{{ option }}" />
+			{{ option }} 
+		</label>
+	</li>
+{% endfor %}
+</ul>

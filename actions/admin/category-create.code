@@ -1,0 +1,5 @@
+# Create Category: {{ name }}
+$upgrade->verify('category_not_exists', '{{ slug }}') && $upgrade->add('category_create', <<<VALUE
+{{ value }}
+VALUE, 'Created category: {{ name }}');
+

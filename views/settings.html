@@ -1,0 +1,22 @@
+<div class="wrap">
+	<h2>{{ 'Site Plugin Settings' | l }}</h2>
+
+{% if created %}
+	<p class="info">
+		{{ 'info' | message messages }} <a href="{{ activation_url }}">{{ 'Activate' | l }}</a> this plugin.
+	</p>
+{% else %}
+	<h3>{{ 'Create Site Plugin' | l }}</h3>
+	{% if error %}
+	<p class="error">
+		{{ 'error' | message messages }}
+	</p>
+	{% endif %}
+	<form action="{{ url }}" method="post">
+		<label for="name">{{ 'Name' | l }}</label>
+		<input type="text" name="name" value="{{ name }}"/>
+		<input type="submit" value="{{ 'Submit' | l }}"/>
+	</form>
+{% endif %}
+
+</div>

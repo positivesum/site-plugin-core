@@ -1,0 +1,5 @@
+# Update option: {{ option }}
+$upgrade->add('option_update', '{{ option }}', <<<VALUE
+{{ value }}
+VALUE, 'Updated option: {{ option }}');
+

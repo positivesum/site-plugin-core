@@ -1,0 +1,25 @@
+<div class="wrap">
+	<h2>{{ 'Create Upgrade' | l }}</h2>
+	
+	{% if created %}
+		<p>{{ 'Version' | l  }} {{ version }} {{ 'was created.' | l }}</p>
+	{% else %}
+	
+	{% endif %}
+		<h3>{{ 'Include' | l }}</h3>
+		<form action="{{ url }}" method="post">
+
+		{% for title, html in elements %}
+			<fieldset class="{{ title | hyphenize }}">
+				
+				<h4>{{ title }}</h4>
+				{{ html | safe }}
+				
+			</fieldset>
+		{% endfor %}
+		
+			<input type="submit" value="{{ 'Submit' | l }}"/><br/>
+			<input type="hidden" name="action" value="create" />
+
+		</form>
+</div>
