@@ -40,7 +40,7 @@ class SP_OptionActionsTest extends WPTestCase {
 			'thumbnail_size_h','thumbnail_size_w','timezone_string','time_format','uploads_use_yearmonth_folders','upload_path',
 			'upload_url_path','users_can_register','use_balanceTags','use_smilies','use_trackback','widget_archives',
 			'widget_categories','widget_meta','widget_recent-comments','widget_recent-posts','widget_rss','widget_search',
-			'widget_text','wp_test_user_roles');
+			'widget_text','wp_user_roles');
 		$options = SiteUpgradeOptionACtions::options();
 		$this->assertEquals($expected, $options);
 		
