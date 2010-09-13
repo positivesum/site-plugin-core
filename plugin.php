@@ -9,7 +9,8 @@ Author URI: http://taras.cc
 */
 
 include_once(dirname(__FILE__).'/lib.php');
-
+include_once(dirname(__FILE__).'/upgrade.php');
+session_start();
 # display Site Plugin Admin interface
 if ( is_admin() ) include_once(dirname(__FILE__).'/admin.php');
 
@@ -128,7 +129,7 @@ if (!class_exists("SitePlugin")) {
 			$version = array();
 			
 			$version['upgrade'] = $this->get_path($id, 'upgrade');
-			$version['version'] = $this->get_path($id, 'version');
+//			$version['version'] = $this->get_path($id, 'version');
 				
 			return $version;
 		}
@@ -202,7 +203,8 @@ if (!class_exists("SitePlugin")) {
 		}
 		
 		/*
-		 * Perform the upgrade. Return true if successful or error if failed.
+		 * Perform the upgrade.
+		 * if action = before, runs in dryrun mode
 		 * @param $id int id of the version to upgrade to
 		 * @return mixed bool or array
 		 */
@@ -213,13 +215,29 @@ if (!class_exists("SitePlugin")) {
 				return "Next upgrade is " . $this->next_upgrade() . " not $id";
 			}
 			
-			$version = $this->get_version_info($id);				
-			
+			$version = $this->get_version_info($id);			
+			$upgrade = null;
 			switch($_GET['action']):
-			case 'before': include($version['before']); break;
-			case 'upgrade': include($version['upgrade']); break;
-			case 'after': include($version['after']); $this->bump_version(); break;
-			default: wp_die($_GET['action'] . ' is not a valid action.');
+			case 'before':
+                $upgrade = new SiteUpgrade($this->errors, true);
+                include($version['upgrade']);
+                break;
+			case 'upgrade':
+                $upgrade = new SiteUpgrade($this->errors);
+                include($version['upgrade']);
+                $_SESSION['upgrade'] = $upgrade;
+                break;
+//			case 'after':
+//                include($version['after']);
+//                $this->bump_version();
+//                break;
+			case 'apply':
+                $upgrade = $_SESSION['upgrade'];
+                $upgrade->execute();
+                $this->bump_version();
+                break;
+			default:
+                wp_die($_GET['action'] . ' is not a valid action.');
 			endswitch;
 			
 			return TRUE;
@@ -298,12 +316,14 @@ if (!class_exists("SitePlugin")) {
 		function main_page() {
 			$this->verify_permissions(); 
 			# TODO: load main page from template
+            include('views/main.html');
 
 		} 
 		
 		function upgrade_page() { 
 			$this->verify_permissions();
 			# TODO: load upgrade page from template
+            include('views/upgrade.html');
 			
 		}
 	}

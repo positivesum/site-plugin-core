@@ -3,7 +3,7 @@
 if ( !class_exists('SiteUpgrade') ) {
 	
 	class SiteUpgrade {
-		
+		var $dryrun = false;
 		var $tasks = array(); # contains tasks that need to be executed during this upgrade
 		var $changelog = array(); # contains changelog for current upgrade
 		var $actions = array(); # contains all of the actions that this upgrade is aware of
@@ -11,14 +11,26 @@ if ( !class_exists('SiteUpgrade') ) {
 		/*
 		 * @param $errors WP_Error instance for reporting errors
 		 */
-		function __construct($messages) {
+		function __construct($messages, $dryrun = false) {
 			
 			$this->messages =& $messages;
-			
+			$this->dryrun = $dryrun;
 			$this->actions = apply_filters('site_upgrade_actions', $this->actions);
 			
 		}
 		
+		function get_arg_array($arg) {
+
+			if ( !is_array($arg) && !is_string($arg) ) {
+				$this->messages->add('error', __('Invalid argument type: ') . gettype($arg) );
+				return $this->messages;
+			} elseif ( is_string($arg) ) {
+				return Spyc::YAMLLoad($arg);
+			} elseif ( is_array($arg) ) {
+				return $arg;
+			}
+
+		}
 		/*
 		 * Add a task to the current upgrade.
 		 * @param str name of callback function to execute
@@ -26,21 +38,13 @@ if ( !class_exists('SiteUpgrade') ) {
 		 * @param str message to describing this action
 		 * @return TRUE or WP_Error
 		 */
-		function add( $function, $arg, $msg ) {
-	
-			if ( !is_array($arg) && !is_string($arg) ) {
-				$this->messages->add('error', __('Invalid argument type: ') . gettype($arg) );
-				return $this->messages;
-			} elseif ( is_string($arg) ) {
-				$arg = Spyc::YAMLLoad($arg);
-			} elseif ( is_array($arg) ) {
-				$arg = $arg;
-			}
-			
-			array_push($this->tasks, array( $function, $arg, $msg ));
+		function add($function, $arg, $msg ) {
+
+			$arg = $this->get_arg_array($arg);
+			array_push($this->tasks, array($function, $arg, $msg ));
 			if ( $msg ) array_push($this->changelog, $msg);
-			
 			return TRUE;
+
 		}
 		
 		/*
@@ -51,30 +55,29 @@ if ( !class_exists('SiteUpgrade') ) {
 		function execute( $dryrun = FALSE ) {
 			
 			do_action('site_plugin_before_upgrade');
-			
-			$errors = array()
+			$errors = array();
 			
 			foreach ( $this->tasks as $task ) {
 				
 				list($function, $arg, $msg) = $task;
 				
-				if ( array_key_exists($this->actions, $function) ) { 
+				if ( array_key_exists($function, $this->actions) ) { 
 					try {
-	                	if ( $dryrun ) {
-	                		$this->messages->add('info', __('Dryrun: ') . $msg);
-	                	} else {
+//	                	if ( $dryrun ) {
+//	                		$this->messages->add('info', __('Dryrun: ') . $msg);
+//	                	} else {
 	                		$action = $this->actions[$function];
-	                		if ( is_wp_error( $result = $action->execute($args, $this->messages) ) {
-		                		$this->messages->add('info', $msg);	                			
+	                		if ( is_wp_error( $result = call_user_func($action, $arg, $msg) )) {
+		                		array_push($errors, $result->get_error_message());
 	                		} else {
-	                			array_push($errors, $return->get_error_message());
+	                			$this->messages->add('info', $msg);
 	                		}
-	                	}
+//	                	}
 	            	} catch (Exception $e) {
 	                	$this->messages->add('exception', $e->getMessage());
 	            	}
 				} else {
-					array_push($errors, __("Function is not defined: ") . $function));
+					array_push($errors, __("Function is not defined: ") . $function);
 				}
 				
 			}
@@ -97,22 +100,27 @@ if ( !class_exists('SiteUpgrade') ) {
 		 * @param $msg string to report
 		 * @return boolean result of assertion
 		 */
-		function verify( $test, $msg ) {
-			
-			# TODO: Fix this, this is not right.
-			$test = (boolean) $test;
-			
-			if ( $test ) {
-				$this->messages->add('passed', $msg);
-			} else {
-				$this->messages->add('failed', $msg);
-			}
-			
-			return $test;
+		function verify($function, $arg ) {
+			switch ($this->dryrun):
+			case true:
+                if (array_key_exists($function, $this->actions) ) {
+                    $action = $this->actions[$function];
+                    $arg = $this->get_arg_array($arg);
+                    if (call_user_func($action, $arg)) {
+                        $this->messages->add('info', "$function returned true, the precondition has been verified.");
+                    } else {
+                        $this->messages->add('info', "$function returned false, the precondition could not be verified.");
+                    }
+                } else {
+                    array_push($errors, __("Function is not defined: ") . $function);
+                }
+				return false;
+			case false:
+				return true;
+			endswitch;
+            
 		}		
-		
 	}
-	
 }
 
 ?>

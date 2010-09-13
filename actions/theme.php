@@ -12,8 +12,8 @@ if ( !class_exists('SiteUpgradeThemeActions') ) {
 		  * @param str $template
 		  * @param str $stylesheet
 		  */
-		  function switch_theme($template, $stylesheet) {
-		  	  switch_theme($template, $stylesheet);
+		  function switch_theme($arg) {
+		  	  switch_theme($arg['template'], $arg['stylesheet']);
 		  }
 		  
 		 /*
@@ -22,9 +22,7 @@ if ( !class_exists('SiteUpgradeThemeActions') ) {
 		  * @return boolean
 		  */
 		  function theme_exists($theme) {
-		  
-		  	  return !is_null(get_theme($theme));
-		  	  
+		  	  return !is_null(get_theme($theme['theme_name']));
 		  }
 		  
 		  
@@ -53,8 +51,9 @@ if ( !class_exists('SiteUpgradeThemeActions') ) {
 
 			if ( !is_null($theme) ) {
 				$this->h2o->loadTemplate('themes.code');
+				$theme_name = Spyc::YAMLDump(array('theme_name'=>$theme['Name']));
 				$value = Spyc::YAMLDump(array('template'=>$theme['Template'], 'stylesheet'=>$theme['Stylesheet']));
-				$code .= $this->h2o->render(array('name'=>$theme['Name'], 'value'=>$value));
+				$code .= $this->h2o->render(array('name'=>$theme['Name'], 'theme_name'=>$theme_name, 'value'=>$value));
 			}
 			
 			return $code;

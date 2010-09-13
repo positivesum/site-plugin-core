@@ -20,10 +20,11 @@
 		<thead>
 			<tr>
 				<th class="version"><?php echo __('Version') ?></th>
-				<th class="changelog"><?php echo __('Changelog') ?></th>
+				<!--<th class="changelog"><?php echo __('Changelog') ?></th>-->
 				<th class="before-upgrade"><?php echo __('Verify before upgrade') ?></th>
 				<th class="upgrade"><?php echo __('Upgrade') ?></th>
-				<th class="after-upgrade"><?php echo __('Test after upgrade') ?></th>
+				<!--<th class="after-upgrade"><?php echo __('Test after upgrade') ?></th>-->
+                <th class="apply-upgrade"><?php echo __('Apply upgrade') ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -32,7 +33,7 @@
 			?>
 				<tr>
 					<td class="version"><?php echo $id ?></td>
-					<td class="changelog"><?php 
+<!--					<td class="changelog"><?php
 						if ( $info['changelog'] ) : ?>
 							<ol>
 							<?php foreach ( explode("\n", $info['changelog']) as $item ) : ?>
@@ -43,7 +44,7 @@
 							echo __('Not specified.');
 						endif; ?>
 					</td>
-					
+-->					
 					<?php if ( $next ) : ?>
 					<td class="before-upgrade">
 						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=before") ?>"><?php echo __('Execute') ?></a>
@@ -51,8 +52,11 @@
 					<td class="upgrade">
 						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=upgrade") ?>"><?php echo __('Execute') ?></a>
 					</td>
-					<td class="after-upgrade">
-						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=after") ?>"><?php echo __('Execute') ?></a>
+					<!--<td class="after-upgrade">-->
+						<!--<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=after") ?>"><?php echo __('Execute') ?></a>-->
+					<!--</td>-->
+                    <td class="apply-upgrade">
+						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=apply") ?>"><?php echo __('Execute') ?></a>
 					</td>
 					<?php else: ?>
 						<td class="unavailable" colspan="3">

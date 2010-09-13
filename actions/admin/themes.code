@@ -1,5 +1,9 @@
 # Switch to theme: {{ name }}
-$upgrade->verify('theme_exists', '{{ name }}') && $upgrade->add('switch_theme', <<<VALUE
+$upgrade->verify('theme_exists', <<<NAME
+{{ theme_name }}
+NAME
+) && $upgrade->add('switch_theme', <<<VALUE
 {{ value }}
-VALUE, 'Switched to theme: {{ name }}');
+VALUE
+, 'Switched to theme: {{ name }}');
 
