@@ -15,8 +15,14 @@ if ( !class_exists('SiteUpgrade') ) {
 			
 			$this->messages =& $messages;
 			$this->dryrun = $dryrun;
+
+            /*
+             * site_upgrade_actions hook loads $this->actions property with an associative array.
+             * This array has action name as key and callback in the following form:
+             * array("$actionname" => array(&$instance_of_SiteUpgradeAction, "$function_name"), ...)
+             */
 			$this->actions = apply_filters('site_upgrade_actions', $this->actions);
-			
+
 		}
 		
 		function get_arg_array($arg) {
@@ -25,7 +31,7 @@ if ( !class_exists('SiteUpgrade') ) {
 				$this->messages->add('error', __('Invalid argument type: ') . gettype($arg) );
 				return $this->messages;
 			} elseif ( is_string($arg) ) {
-				return Spyc::YAMLLoad($arg);
+				return SiteUpgradeAction::unserialize($arg);
 			} elseif ( is_array($arg) ) {
 				return $arg;
 			}

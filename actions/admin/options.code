@@ -1,5 +1,6 @@
 # Update option: {{ option }}
-$upgrade->add('option_update', '{{ option }}', <<<VALUE
+${{ option }}_yaml = <<<VALUE
 {{ value }}
-VALUE, 'Updated option: {{ option }}');
+VALUE;
+$upgrade->add('option_update', ${{ option }}_yaml, 'Updated option: {{ option }}');
 

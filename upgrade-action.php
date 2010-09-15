@@ -17,14 +17,14 @@ if ( !class_exists('SiteUpgradeAction') ) {
 			# this makes Site Upgrades class aware of functions that this action
 			# exposes. Exposing functions in this way makes them available to
 			# Site Upgrades class to execute during an upgrade
-			add_filter('site_upgrade_actions', array($this, 'register'));
+			add_filter('site_upgrade_actions', array(&$this, 'register'));
 
 			# register admin function of current action class with code that will
 			# ouput upgrade generation admin interface
-			add_filter('site_plugin_admin', array($this, 'admin'));
+			add_filter('site_plugin_admin', array(&$this, 'admin'));
 
 			# register generate function that will generate code for this action
-			add_filter('site_upgrade_generate', array($this, 'generate'));
+			add_filter('site_upgrade_generate', array(&$this, 'generate'));
 			
 			$loader = new H2o_File_Loader($template_path);
 			$this->h2o = new H2o(NULL, array('context'=>&$this, 'loader'=>$loader));
@@ -80,6 +80,35 @@ if ( !class_exists('SiteUpgradeAction') ) {
 		function execute($args, &$messages) {
 			return TRUE;
 		}
+
+        /**
+         * Return value serialized in yaml.
+         * Strings are wrapped into an array, because Spyc unserializes everything into arrays.
+         * This way, we can distinguish this string from an array and convert it to string instead of array.
+         * @static
+         * @param  $value to be serialized
+         * @return string of yaml
+         */
+        public static function serialize( $value ) {
+
+            if ( is_string($value) ) $value = array('str'=>$value);
+
+            return Spyc::YAMLDump($value);
+
+        }
+
+        /**
+         * Return unserialize the yaml string
+         * @static
+         * @param  $yaml
+         * @return array|str
+         */
+        public static function unserialize( $yaml ) {
+
+            $arr = Spyc::YAMLLoad( $yaml );
+            return ( count($arr) == 1 && array_key_exists('str', $arr) && is_string($arr['str'])) ? $arr['str'] : $arr; 
+
+        }
 		
 	}
 	
