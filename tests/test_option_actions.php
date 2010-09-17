@@ -1,4 +1,4 @@
-<?
+<?php
 
 class SP_OptionActionsTest extends WPTestCase {
 	
@@ -45,8 +45,8 @@ class SP_OptionCodeGeneratorTest extends WPTestCase {
         $upgrade = $this->upgrade;
         eval($this->code);
         $this->assertEquals(count($upgrade->tasks), 2);
-        $this->assertEquals($this->upgrade->tasks[0][1], 'Test string');
-        $this->assertEquals($this->upgrade->tasks[1][1], array(1, 2, 3));
+        $this->assertEquals($this->upgrade->tasks[0][1], array('test_string_option'=>'Test string'));
+        $this->assertEquals($this->upgrade->tasks[1][1], array('test_array_option'=>array(1, 2, 3)));
     }
 
 }

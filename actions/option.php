@@ -59,7 +59,7 @@ if ( !class_exists('SiteUpgradeOptionActions') ) {
 			
 			foreach ( $options as $option ) {
                 $value = get_option($option, '');
-				$result[] = array('option'=>$option, 'value'=>$this->serialize($value));
+				$result[] = array('option'=>$option, 'value'=>$this->serialize(array("$option"=>$value)));
 			}
 
 			$this->h2o->loadTemplate('options.code');

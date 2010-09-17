@@ -91,8 +91,6 @@ if ( !class_exists('SiteUpgradeAction') ) {
          */
         public static function serialize( $value ) {
 
-            if ( is_string($value) ) $value = array('str'=>$value);
-
             return Spyc::YAMLDump($value);
 
         }
@@ -105,8 +103,7 @@ if ( !class_exists('SiteUpgradeAction') ) {
          */
         public static function unserialize( $yaml ) {
 
-            $arr = Spyc::YAMLLoad( $yaml );
-            return ( count($arr) == 1 && array_key_exists('str', $arr) && is_string($arr['str'])) ? $arr['str'] : $arr; 
+            return Spyc::YAMLLoad( $yaml );
 
         }
 		
