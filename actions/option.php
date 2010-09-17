@@ -57,8 +57,9 @@ if ( !class_exists('SiteUpgradeOptionActions') ) {
 			
 			$options = $_POST['options'];
 			
-			foreach ( $options as $option ) { 
-				$result[] = array('option'=>$option, 'value'=>Spyc::YAMLDump(get_option($option, '')));
+			foreach ( $options as $option ) {
+                $value = get_option($option, '');
+				$result[] = array('option'=>$option, 'value'=>$this->serialize($value));
 			}
 
 			$this->h2o->loadTemplate('options.code');
