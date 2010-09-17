@@ -1,6 +1,6 @@
 <?php
 
-class SP_ThemeActionsTest extends WPTestCase {
+class SPThemeActionsTest extends WPTestCase {
     var $theme_actions;
     var $theme_present;
     var $theme_not_present;
@@ -38,6 +38,32 @@ class SP_ThemeActionsTest extends WPTestCase {
         $this->theme_actions->switch_theme($this->theme_available);
         $this->assertTrue(get_current_theme() === 'ACMS');
     }
+}
+
+class SPThemeCodeGeneratorTest extends SPCodeGeneratorTest {
+
+    function setUp() {
+        parent::setUp();
+    }
+
+    /**
+     * verify that code is not generated when no theme switch is selected
+     * @return void
+     */
+    function test_notheme_switch(){
+        unset($_POST['theme']);
+        $action =& $this->getAction('switch_theme');
+        $code = $action->generate('');
+        $this->assertEquals($code, '');
+    }
+
+    function test_theme_switch_code(){
+        $_POST['theme'] = 'twentyten';
+        $action =& $this->getAction('switch_theme');
+        $code = $action->generate('');
+        $this->check_syntax($code);
+    }
+
 }
 
 ?>

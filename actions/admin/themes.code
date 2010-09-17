@@ -6,4 +6,3 @@ NAME
 {{ value }}
 VALUE
 , 'Switched to theme: {{ name }}');
-

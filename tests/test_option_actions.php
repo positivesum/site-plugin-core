@@ -1,6 +1,6 @@
 <?php
 
-class SP_OptionActionsTest extends WPTestCase {
+class SPOptionActionsTest extends WPTestCase {
 	
 	function setUp() {
 		parent::setUp();
@@ -22,23 +22,19 @@ class SP_OptionActionsTest extends WPTestCase {
 	
 }
 
-class SP_OptionCodeGeneratorTest extends WPTestCase {
+class SPOptionCodeGeneratorTest extends SPCodeGeneratorTest {
 
     function setUp() {
-        $errors = new WP_Error();
-        $this->upgrade = new SiteUpgrade($errors);
-
-        $callback = $this->upgrade->actions['option_update'];
-        $action =& $callback[0];
+		parent::setUp();        
         update_option('test_string_option', 'Test string');
         update_option('test_array_option', array(1, 2, 3));
         $_POST['options'] = array('test_string_option', 'test_array_option');
+        $action = &$this->getAction('option_update');
         $this->code = $action->generate('');
     }
 
     function test_generated_code_syntax() {
-        $error = SPTestHelper::is_valid_syntax($this->code);
-        $this->assertFalse(is_wp_error($error), (is_wp_error($error))?$error->get_error_message():'Option Update syntax is valid');
+        $this->check_syntax($this->code);
     }
 
     function test_generated_yaml() {

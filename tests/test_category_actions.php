@@ -1,6 +1,6 @@
 <?php
 
-class SP_CategoryActionsTest extends WPTestCase {
+class SPCategoryActionsTest extends WPTestCase {
 	
 	function setUp() {
 		parent::setUp();

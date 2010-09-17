@@ -53,3 +53,27 @@ class SPTestHelper {
 
 }
 
+class SPCodeGeneratorTest extends WPTestCase {
+
+    /**
+     * Get the action by it's name
+     * @param  $name
+     * @return callback array
+     */
+    function getAction($name){
+        $callback = $this->upgrade->actions[$name];
+        return $callback[0];
+    }
+
+    function check_syntax($code){
+        $error = SPTestHelper::is_valid_syntax($code);
+        $this->assertFalse(is_wp_error($error), (is_wp_error($error))?$error->get_error_message():'Syntax is valid');        
+    }
+
+    function setUp() {
+		parent::setUp();
+        $errors = new WP_Error();        
+        $this->upgrade = new SiteUpgrade($errors);
+    }
+
+}
