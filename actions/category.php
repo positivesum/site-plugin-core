@@ -60,7 +60,7 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 		 	 $html[] = '<ul id="'.$name.'" class="list:category categorychecklist form-no-clear">';
 		 	 ob_start();
 		 	 $post = get_post($id=0);
-		 	 $args = array( 'taxonomy' => 'category', 'popular_cats' => wp_popular_terms_checklist('category'));
+		 	 $args = array( 'taxonomy' => 'category', 'popular_cats' => wp_popular_terms_checklist('category', 0, 0, false));
 			 wp_terms_checklist($post->ID, $args);
 			 $checklist = ob_get_contents();
 			 $html[] = str_replace('post_category', $name, $checklist);
