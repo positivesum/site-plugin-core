@@ -6,13 +6,14 @@ if ( !class_exists('SiteUpgradeOptionActions') ) {
 		
 		var $functions = array('option_update');
 		
-		/*
-		 * Updates an option to the specified value
-		 * @param $option str 
-		 * @param $value mixed
-		*/
-		public static function option_update($option, $value) {	
-			update_option($option, $value);
+		/**
+         * @static
+         * @param  $arg array
+         * @return void
+         */
+        public static function option_update($arg) {
+            
+			update_option(key($arg), current($arg));
 		}
 
 		/*
