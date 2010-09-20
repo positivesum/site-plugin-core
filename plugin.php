@@ -35,6 +35,7 @@ if (!class_exists("SitePlugin")) {
 			add_action('init', array(&$this, 'init'));
 			
 			register_activation_hook( $this->path.'/plugin.php' , array(&$this, 'create_version_option') );
+            register_deactivation_hook( $this->path.'/plugin.php' , array(&$this, 'delete_version_option') );
 			
 		}
 		
@@ -66,7 +67,13 @@ if (!class_exists("SitePlugin")) {
 			
 			}
 		}
-		
+        /**
+         * Deletes version option for current plugin
+         * @return void
+         */
+        function delete_version_option() {
+			delete_option($this->option_name);
+		}
 		/*
 		 * Return the current active version of the plugin
 		 * @return int current version number
