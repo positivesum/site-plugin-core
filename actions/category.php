@@ -4,21 +4,35 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 	
 	class SiteUpgradeCategoryActions extends SiteUpgradeAction {
 		
-		var $functions = array('category_update', 'category_exists', 'category_create');
+		var $functions = array('category_update', 'category_exists', 'category_create', 'category_not_exists');
 	
-		/*
+        /**
+         * @static
+         * @param  $args
+         * @return void
+         */
+        public static function category_create($args) {
+            if ( !array_key_exists('name', $args)) {
+                 return new WP_Error('error', __('Category name is not specified'));
+            }
+
+            $result = wp_insert_term($args['name'], 'category', $args);
+             if ( is_wp_error($result) ) return new WP_Error('error', __('Error occured while trying to insert category'));
+		 	 else return true;
+        }
+        /*
 		 * Updates category to values specified in array
 		 * @param array $args
 		 * @return true|WP_Error
 		 */
 		 public static function category_update($args) {
 		 
-		 	 if ( !array_key_exists('id', $args) ) {
+		 	 if ( !array_key_exists('cat_ID', $args) ) {
 		 	 	 return new WP_Error('error', __('Category id is not specified'));
 		 	 }
 		 	 
-		 	 $term_id = $args['id'];
-		 	 unset($args['id']);
+		 	 $term_id = $args['cat_ID'];
+		 	 unset($args['cat_ID']);
 		 	 
 		 	 $data = array();
 		 	 if ( array_key_exists('name', $args) ) $data['name'] = $args['name'];		 	 
@@ -33,22 +47,24 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 		 
 		 }
 		 
-		 /*
-		  * Check if category exists
-		  * @param array $args
-		  * @return boolean
-		 */
-		 public static function category_exists( $slug ) {
-		 	 return is_category( $slug );
+         /**
+          * Returns true if category exists so that it can be updated
+          * @static
+          * @param  $arg
+          * @return bool
+          */
+		 public static function category_exists( $arg ) {
+		 	 return (boolean) get_category_by_slug( current($arg));
 		 }
 
-		 /*
-		  * Check if category does not exist
-		  * @param array $args
-		  * @return boolean
-		 */
-		 public static function category_not_exists( $slug ) {
-		 	 return !is_category( $slug );
+        /**
+         * Returns false if category exists so that the attempt to create category fails
+         * @static
+         * @param  $arg
+         * @return bool
+         */
+		 public static function category_not_exists( $arg ) {
+		 	 return !get_category_by_slug( current($arg));
 		 }		 
 		 
 		 function get_checklist($title) {
@@ -89,7 +105,7 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 		function categories_code($type, $cat_ids) {
 			
 			$code = '';
-			
+
 			switch ( $type ) :
 				case ( 'update-categories' ) : $this->h2o->loadTemplate('category-update.code'); break;
 				case ( 'create-categories' ) : $this->h2o->loadTemplate('category-create.code'); break;
@@ -99,12 +115,14 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 			foreach ( $cat_ids as $cat_id ) {
 				$c = get_category($cat_id, ARRAY_A);
 				$data = array(
-					'id'=>$c['cat_ID'],
+					'cat_ID'=>$c['cat_ID'],
 					'name'=>$c['name'], 'description'=>$c['description'], 
 					'parent'=>$c['parent'], 'slug'=>$c['slug']
 					);
-				$value = Spyc::YAMLDump($data);
-				$code .= $this->h2o->render(array('id'=>$c['cat_ID'], 'name'=>$c['name'], 'value'=>$value, 'slug'=>$c['slug']));					
+				$value = $this->serialize($data);
+                $id = $this->serialize(array($c['cat_ID']));
+                $slug = $this->serialize(array($c['slug']));
+				$code .= $this->h2o->render(array('id'=>$id, 'name'=>$c['name'], 'value'=>$value, 'slug'=>$slug));
 			}
 			
 			return $code;
@@ -118,19 +136,18 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 		function generate($code) {
 			
 			$result = array();
-
 			if ( array_key_exists('create-categories', $_POST) && $cat_ids = $_POST['create-categories']) 
 				$code .= $this->categories_code('create-categories', $cat_ids);
 			
 			if ( array_key_exists('update-categories', $_POST) && $cat_ids = $_POST['update-categories']) 
 				$code .= $this->categories_code('update-categories', $cat_ids);
 			
-			return $code;
+            return $code;
 			
 		}
 		
 	}
 
 	new SiteUpgradeCategoryActions();
-	
+
 }
