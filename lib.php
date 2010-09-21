@@ -11,9 +11,9 @@ require_once(dirname(__FILE__).'/lib/h2o_filters.php');
 
 // include Site Upgrade Actions
 include_once(dirname(__FILE__).'/upgrade-action.php');
+include_once(dirname(__FILE__).'/actions/category.php');
 include_once(dirname(__FILE__).'/actions/option.php');
-include_once(dirname(__FILE__).'/actions/category.php');// TODO if category is above option and if we generate only category then it is not generated
-//include_once(dirname(__FILE__).'/actions/page.php'); TODO This somehow overrides category.php
+//include_once(dirname(__FILE__).'/actions/page.php');
 include_once(dirname(__FILE__).'/actions/theme.php');
 
 // include tests when test is being executed
