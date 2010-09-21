@@ -54,7 +54,7 @@ if ( !class_exists('SiteUpgradeOptionActions') ) {
 		function generate($code) {
 
 			$result = array();
-			if ( !( array_key_exists('options', $_POST) && $_POST['options'] ) ) return '';
+			if ( !( array_key_exists('options', $_POST) && $_POST['options'] ) ) return $code;
 			
 			$options = $_POST['options'];
 			
