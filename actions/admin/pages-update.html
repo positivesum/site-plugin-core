@@ -1,0 +1,11 @@
+<h5>{{title}}</h5>
+<ul id="update-pages">
+{% for page in pages %}
+	<li>
+		<label for="update_page_{{ page.post_name }}">
+			<input type="checkbox" name="update-pages[]" id="update_page_{{ page.post_name }}" value="{{ page.ID }}" />
+			{{ page.post_title }} ({{ page.post_name }})
+		</label>
+	</li>
+{% endfor %}
+</ul>

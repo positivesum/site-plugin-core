@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 if ( !class_exists('SiteUpgradePageActions') ) {
-	
+
 	class SiteUpgradePageActions extends SiteUpgradeAction {
-		
-		var $functions = array('page_update', 'page_exists', 'page_create');
-		 
+
+		var $functions = array('page_update', 'page_exists', 'page_not_exists', 'page_create');
+
 		 /*
 		  * Check if page exists
 		  * @param str $slug
@@ -22,109 +22,105 @@ if ( !class_exists('SiteUpgradePageActions') ) {
 		 */
 		 function page_not_exists( $slug ) {
 		 	 return !is_page( $slug );
-		 }		 
+		 }
 
 		/*
 		 * Updates page to values specified in array
 		 * @param array $args
 		 * @return true|WP_Error
 		*/
-		function category_update($args) {
-		 
+		function page_update($args) {
+
 			if ( !array_key_exists('id', $args) ) {
 			 return new WP_Error('error', __('Page id is not specified'));
 			}
-			
+
 			$data = array();
 			# TODO: load values for page update
-			
+
 			if ( is_wp_error($result) ) return new WP_Error('error', __('Error occured while updating page'));
 			else return true;
-		 
+
 		}
-		 
-		function get_checklist($title) {
-			require_once(ABSPATH . 'wp-admin/includes/meta-boxes.php');
-			
-			$html = array();
-			$name = sanitize_title_with_dashes($title);
-			$html[] = '<h5>'.__($title).'</h5>';
-			$html[] = '<ul id="'.$name.'" class="list:category categorychecklist form-no-clear">';
-			ob_start();
-			$page = get_page($id=0);
-			$args = array( 'taxonomy' => 'category', 'popular_cats' => wp_popular_terms_checklist('category'));
-			wp_terms_checklist($page->ID, $args);
-			$checklist = ob_get_contents();
-			$html[] = str_replace('page_category', $name, $checklist);
-			ob_end_clean();
-			$html[] = '</ul>';		 	 
-			
-			return $html;
+        /**
+         * Creates a page 
+         * @param  $args
+         * @return void
+         */
+        function page_create($args) {
+
+        }
+		/**
+         * Creates the checklist of pages to be created and updated
+         * @param  $title
+         * @return 
+         */
+        function get_checklist($title) {
+            switch ($title):
+                case 'Create Pages':
+                    $this->h2o->loadTemplate('pages-create.html');
+                break;
+                case 'Update Pages':
+                    $this->h2o->loadTemplate('pages-update.html');
+                break;
+            endswitch;
+
+            $pages = get_pages();
+            return $this->h2o->render(array('pages'=>$pages, 'title'=>$title));
 		}
-		 
-		function admin( $elements ) {
-		 
-		 $html = array_merge($this->get_checklist('Create Categories'), $this->get_checklist('Update Categories'));		 	 
-		 $html[] = '<style type="text/css">ul.children { margin-left: 10px; }</style>';
-		 $elements[__('Categories')] = implode("\n", $html);
-		
-		 return $elements;
-		
-		}
-		 
+
+        function admin( $elements ) {
+            $elements[__('Pages')] = $this->get_checklist('Create Pages') . $this->get_checklist('Update Pages') ;
+            return $elements;
+        }
+
 		/*
 		 * Return string of code to output for upgrade file
 		 * @param str type ( `update-categories` or `create-categories` )
 		 * @param array $cat_ids categories to include
 		 * @return str of code
 		*/
-		function categories_code($type, $cat_ids) {
-			
+		function pages_code($type, $page_ids) {
+
 			$code = '';
-			
+
 			switch ( $type ) :
-				case ( 'update-categories' ) : $this->h2o->loadTemplate('category-update.code'); break;
-				case ( 'create-categories' ) : $this->h2o->loadTemplate('category-create.code'); break;
+				case ( 'create-pages' ) : $this->h2o->loadTemplate('page-create.code'); break;
+				case ( 'update-pages' ) : $this->h2o->loadTemplate('page-update.code'); break;
 				default: return '';
 			endswitch;
-				
-			foreach ( $cat_ids as $cat_id ) {
-				$c = get_category($cat_id, ARRAY_A);
-				$data = array(
-					'id'=>$c['cat_ID'],
-					'name'=>$c['name'], 'description'=>$c['description'], 
-					'parent'=>$c['parent'], 'slug'=>$c['slug']
-					);
-				$value = Spyc::YAMLDump($data);
-				$code .= $this->h2o->render(array('id'=>$c['cat_ID'], 'name'=>$c['name'], 'value'=>$value, 'slug'=>$c['slug']));					
+
+			foreach ( $page_ids as $page_id ) {
+				$p = get_page($page_id, ARRAY_A);
+				$value = $this->serialize($p);
+                $slug = $this->serialize(array($p['post_name']));
+				$code .= $this->h2o->render(array( 'name'=>$p['post_title'], 'slug'=>$slug, 'value'=>$value));
 			}
-			
+
 			return $code;
 		}
-		
+
 		/*
 		 * This method is called when upgrade script for an action is being generated.
 		 * @param $args necessary for function's operation
 		 * @return str of php code to add to upgrade script
 		 */
 		function generate($code) {
-			
-			$result = array();
-		
-			if ( array_key_exists('create-categories', $_POST) && $cat_ids = $_POST['create-categories']) 
-				$code .= $this->categories_code('create-categories', $cat_ids);
-			
-			if ( array_key_exists('update-categories', $_POST) && $cat_ids = $_POST['update-categories']) 
-				$code .= $this->categories_code('update-categories', $cat_ids);
-			
+
+			if ( array_key_exists('create-pages', $_POST) && $page_ids = $_POST['create-pages'])
+				$code .= $this->pages_code('create-pages', $page_ids);
+
+            if ( array_key_exists('update-pages', $_POST) && $page_ids = $_POST['update-pages'])
+				$code .= $this->pages_code('update-pages', $page_ids);
+
 			return $code;
-			
+
 		}
-		
+
 	}
 
 	new SiteUpgradePageActions();
-	
+
 }
 
 ?>

@@ -13,7 +13,7 @@ require_once(dirname(__FILE__).'/lib/h2o_filters.php');
 include_once(dirname(__FILE__).'/upgrade-action.php');
 include_once(dirname(__FILE__).'/actions/category.php');
 include_once(dirname(__FILE__).'/actions/option.php');
-//include_once(dirname(__FILE__).'/actions/page.php');
+include_once(dirname(__FILE__).'/actions/page.php');
 include_once(dirname(__FILE__).'/actions/theme.php');
 
 // include tests when test is being executed

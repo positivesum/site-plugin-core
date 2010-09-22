@@ -1,0 +1,11 @@
+<h5>{{title}}</h5>
+<ul id="create-pages">
+{% for page in pages %}
+	<li>
+		<label for="create_page_{{ page.post_name }}">
+			<input type="checkbox" name="create-pages[]" id="create_page_{{ page.post_name }}" value="{{ page.ID }}" />
+			{{ page.post_title }} ({{ page.post_name }})
+		</label>
+	</li>
+{% endfor %}
+</ul>
