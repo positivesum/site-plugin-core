@@ -4,15 +4,15 @@ if ( !class_exists('SiteUpgradePageActions') ) {
 
 	class SiteUpgradePageActions extends SiteUpgradeAction {
 
-		var $functions = array('page_update', 'page_exists', 'page_not_exists', 'page_create');
+		var $functions = array('page_update', 'page_exists', 'page_not_exists', 'page_create', 'page_update_meta');
 
 		 /*
 		  * Check if page exists
 		  * @param str $slug
 		  * @return boolean
 		 */
-		 function page_exists( $slug ) {
-		 	 return is_page( $slug );
+		 function page_exists( $ID ) {
+		 	 return (boolean) get_page( current($ID), ARRAY_A );
 		 }
 
 		 /*
@@ -20,35 +20,54 @@ if ( !class_exists('SiteUpgradePageActions') ) {
 		  * @param str $slug
 		  * @return boolean
 		 */
-		 function page_not_exists( $slug ) {
-		 	 return !is_page( $slug );
+		 function page_not_exists( $ID ) {
+		 	 return !get_page( current($ID), ARRAY_A );
 		 }
-
+        /**
+         * This function updates postmeta of a page
+         * @param  $args
+         * @return void
+         */
+        function page_update_meta($args) {
+            if ( !array_key_exists('ID', $args) ) {
+                return new WP_Error('error', __('Page id is not specified'));
+            }
+            $post_id = $args['ID'];
+            unset($args['ID']);
+            foreach($args as $meta_key => $meta_values) {
+                foreach ($meta_values as $meta_value) {
+                    update_post_meta($post_id, $meta_key, $meta_value);
+                }
+            }
+        }
 		/*
 		 * Updates page to values specified in array
 		 * @param array $args
 		 * @return true|WP_Error
 		*/
-		function page_update($args) {
+        function page_update($args) {
 
-			if ( !array_key_exists('id', $args) ) {
-			 return new WP_Error('error', __('Page id is not specified'));
-			}
+            if ( !array_key_exists('ID', $args) ) {
+                return new WP_Error('error', __('Page id is not specified'));
+            }
 
-			$data = array();
-			# TODO: load values for page update
-
-			if ( is_wp_error($result) ) return new WP_Error('error', __('Error occured while updating page'));
-			else return true;
-
-		}
+            if (wp_update_post($args) === 0) {
+                return new WP_Error('error', __('Error occured while updating page'));
+            }
+            return true;
+        }
         /**
-         * Creates a page 
          * @param  $args
-         * @return void
+         * @return WP_Error
          */
         function page_create($args) {
-
+            $args['ID'] = null;
+            $id = wp_insert_post($args);
+            if ($id === 0) {
+                return new WP_Error('error', __('Error occured while updating page'));
+            } else {
+               wp_publish_post( $id );
+            }
         }
 		/**
          * Creates the checklist of pages to be created and updated
@@ -74,12 +93,11 @@ if ( !class_exists('SiteUpgradePageActions') ) {
             return $elements;
         }
 
-		/*
-		 * Return string of code to output for upgrade file
-		 * @param str type ( `update-categories` or `create-categories` )
-		 * @param array $cat_ids categories to include
-		 * @return str of code
-		*/
+		/**
+         * @param  $type
+         * @param  $page_ids
+         * @return string
+         */
 		function pages_code($type, $page_ids) {
 
 			$code = '';
@@ -89,12 +107,13 @@ if ( !class_exists('SiteUpgradePageActions') ) {
 				case ( 'update-pages' ) : $this->h2o->loadTemplate('page-update.code'); break;
 				default: return '';
 			endswitch;
-
+            
 			foreach ( $page_ids as $page_id ) {
 				$p = get_page($page_id, ARRAY_A);
 				$value = $this->serialize($p);
-                $slug = $this->serialize(array($p['post_name']));
-				$code .= $this->h2o->render(array( 'name'=>$p['post_title'], 'slug'=>$slug, 'value'=>$value));
+                $slug  = $this->serialize($p['ID']);
+				$code .= $this->h2o->render(array( 'ID' => $p['ID'], 'name'=>$p['post_title'], 'slug'=>$slug, 'value'=>$value));
+                $code .= $this->pages_meta_code($page_id);
 			}
 
 			return $code;
@@ -113,10 +132,25 @@ if ( !class_exists('SiteUpgradePageActions') ) {
             if ( array_key_exists('update-pages', $_POST) && $page_ids = $_POST['update-pages'])
 				$code .= $this->pages_code('update-pages', $page_ids);
 
-			return $code;
+			$code =  htmlspecialchars_decode($code, ENT_QUOTES);
+            return $code;
 
 		}
-
+        /**
+         * This method generates script for postmeta of a page
+         * @param  $page_id
+         * @return string
+         */
+        function pages_meta_code($page_id) {
+            $code = '';
+            $this->h2o->loadTemplate('page-update-meta.code');
+            $custom_vars = get_post_custom($page_id);
+            $custom_vars['ID'] = $page_id; // adding page ID
+            $custom_vars = $this->serialize($custom_vars);
+            $slug = $this->serialize($page_id);
+            $code = $this->h2o->render(array('ID'=>$page_id, 'value'=>$custom_vars, 'slug'=>$slug));
+            return $code;
+        }
 	}
 
 	new SiteUpgradePageActions();
