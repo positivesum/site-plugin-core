@@ -1,0 +1,8 @@
+# Update Post Meta: Post Name = {{ post_name }}
+$upgrade->verify('page_exists', <<<SLUG
+{{ post_name_array }}
+SLUG
+) && $upgrade->add('page_update_meta', <<<VALUE
+{{ value }}
+VALUE
+, 'Updated Post Meta: Post Name = {{ post_name }}');

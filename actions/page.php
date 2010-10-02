@@ -11,8 +11,9 @@ if ( !class_exists('SiteUpgradePageActions') ) {
 		  * @param str $slug
 		  * @return boolean
 		 */
-		 function page_exists( $ID ) {
-		 	 return (boolean) get_page( current($ID), ARRAY_A );
+		 function page_exists( $post_name ) {
+             $id = $this->get_id_by_post_name(current($post_name));
+		 	 return (boolean) get_page( ($id), ARRAY_A );
 		 }
 
 		 /*
@@ -20,8 +21,8 @@ if ( !class_exists('SiteUpgradePageActions') ) {
 		  * @param str $slug
 		  * @return boolean
 		 */
-		 function page_not_exists( $ID ) {
-		 	 return !get_page( current($ID), ARRAY_A );
+		 function page_not_exists( $post_name ) {
+		 	 return !$this->page_exists($post_name);
 		 }
         /**
          * This function updates postmeta of a page
@@ -29,26 +30,35 @@ if ( !class_exists('SiteUpgradePageActions') ) {
          * @return void
          */
         function page_update_meta($args) {
-            if ( !array_key_exists('ID', $args) ) {
-                return new WP_Error('error', __('Page id is not specified'));
+            if ( !array_key_exists('post_name', $args) ) {
+                return new WP_Error('error', __('post_name is not specified'));
             }
-            $post_id = $args['ID'];
-            unset($args['ID']);
+
+            $post_id = $this->get_id_by_post_name($args['post_name']);
+            unset($args['post_name']);// that is not a valid custom field, It was exported just to identify a post
+
+            // delete previous meta fields on production site
+            if ($keys = get_post_custom_keys($post_id)) {
+                foreach ($keys as $key) {
+                    delete_post_meta($post_id, $key);
+                }
+            }
+            // add new meta fields on production site
             foreach($args as $meta_key => $meta_values) {
                 foreach ($meta_values as $meta_value) {
-                    update_post_meta($post_id, $meta_key, $meta_value);
+                    add_post_meta($post_id, $meta_key, $meta_value);
                 }
             }
         }
-		/*
+        /*
 		 * Updates page to values specified in array
 		 * @param array $args
 		 * @return true|WP_Error
 		*/
         function page_update($args) {
 
-            if ( !array_key_exists('ID', $args) ) {
-                return new WP_Error('error', __('Page id is not specified'));
+            if ( !array_key_exists('post_name', $args) ) {
+                return new WP_Error('error', __('post_name is not specified'));
             }
 
             if (wp_update_post($args) === 0) {
@@ -56,18 +66,37 @@ if ( !class_exists('SiteUpgradePageActions') ) {
             }
             return true;
         }
-        /**
-         * @param  $args
-         * @return WP_Error
-         */
+       /**
+        * @param  $args
+        * @return bool|WP_Error
+        */
         function page_create($args) {
-            $args['ID'] = null;
+
+            if (!array_key_exists('post_name', $args)) {
+                return new WP_Error('error', __('post_name is not specified'));
+            }
+            unset($args['ID']); // to avoid updating a post with the given ID
+
+            $page_id = $this->get_id_by_post_name($args['post_name']);
+
+            $prev_page = get_page( $page_id, ARRAY_A );
+
+            if ($prev_page && $prev_page['post_status'] === 'trash')
+            {
+                wp_delete_post($page_id, true);// if a post already exists in trash then post_name will identify that post and post we created will be assigned a new post name
+            }
+            else if ($prev_page)
+            {
+                return new WP_Error('error', __('A page with the current post_name already exists. Please generate update script.'));
+            }
+
             $id = wp_insert_post($args);
-            if ($id === 0) {
-                return new WP_Error('error', __('Error occured while updating page'));
+            if ($id === 0 OR ($id instanceof WP_Error)) {
+                return new WP_Error('error', __('Error occured while creating page'));
             } else {
                wp_publish_post( $id );
             }
+            return true;
         }
 		/**
          * Creates the checklist of pages to be created and updated
@@ -111,14 +140,29 @@ if ( !class_exists('SiteUpgradePageActions') ) {
 			foreach ( $page_ids as $page_id ) {
 				$p = get_page($page_id, ARRAY_A);
 				$value = $this->serialize($p);
-                $slug  = $this->serialize($p['ID']);
-				$code .= $this->h2o->render(array( 'ID' => $p['ID'], 'name'=>$p['post_title'], 'slug'=>$slug, 'value'=>$value));
-                $code .= $this->pages_meta_code($page_id);
+                $post_name_array  = $this->serialize($p['post_name']);
+				$code .= $this->h2o->render(array( 'post_name' => $p['post_name'], 'post_name_array'=>$post_name_array, 'value'=>$value));
+                $code .= $this->pages_meta_code($page_id, $p['post_name']);
 			}
 
 			return $code;
 		}
-
+        /**
+         * This method generates script for meta data of a page
+         * @param  $page_id
+         * @return string
+         */
+        function pages_meta_code($page_id, $post_name) {
+            $code = '';
+            $this->h2o->loadTemplate('page-update-meta.code');
+            $custom_vars = get_post_custom($page_id);
+            // TODO exclude fields starting from '_'
+            $custom_vars['post_name'] = $post_name; // adding post_name
+            $custom_vars = $this->serialize($custom_vars);
+            $post_name_array = $this->serialize($post_name);
+            $code = $this->h2o->render(array('post_name'=>$post_name, 'value'=>$custom_vars, 'post_name_array'=>$post_name_array));
+            return $code;
+        }
 		/*
 		 * This method is called when upgrade script for an action is being generated.
 		 * @param $args necessary for function's operation
@@ -132,24 +176,20 @@ if ( !class_exists('SiteUpgradePageActions') ) {
             if ( array_key_exists('update-pages', $_POST) && $page_ids = $_POST['update-pages'])
 				$code .= $this->pages_code('update-pages', $page_ids);
 
-			$code =  htmlspecialchars_decode($code, ENT_QUOTES);
+			$code =  htmlspecialchars_decode($code, ENT_QUOTES);// TODO only decode the code generated by $this->generate
             return $code;
 
 		}
         /**
-         * This method generates script for postmeta of a page
-         * @param  $page_id
-         * @return string
+         * Return ID using $post_name
+         * @param  $post_name
+         * @return null|string
          */
-        function pages_meta_code($page_id) {
-            $code = '';
-            $this->h2o->loadTemplate('page-update-meta.code');
-            $custom_vars = get_post_custom($page_id);
-            $custom_vars['ID'] = $page_id; // adding page ID
-            $custom_vars = $this->serialize($custom_vars);
-            $slug = $this->serialize($page_id);
-            $code = $this->h2o->render(array('ID'=>$page_id, 'value'=>$custom_vars, 'slug'=>$slug));
-            return $code;
+        function get_id_by_post_name($post_name)
+        {
+            global $wpdb;
+            $id = $wpdb->get_var("SELECT ID FROM $wpdb->posts WHERE post_name = '$post_name'");
+            return $id;
         }
 	}
 

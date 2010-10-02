@@ -1,8 +1,9 @@
-# Update Page: {{ name }}
+# Update Post: {{ post_name }}
 $upgrade->verify('page_exists', <<<SLUG
-{{ slug }}
+{{ post_name_array }}
 SLUG
 ) && $upgrade->add('page_update', <<<VALUE
 {{ value }}
 VALUE
-, 'Created Page: {{ name }}');
+, 'Updated Post: {{ post_name }}');
+

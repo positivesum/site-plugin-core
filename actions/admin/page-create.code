@@ -1,8 +1,9 @@
-# Create Page: {{ name }}
+# Create Page: {{ post_name }}
 $upgrade->verify('page_not_exists', <<<SLUG
-{{ slug }}
+{{ post_name_array }}
 SLUG
 ) && $upgrade->add('page_create', <<<VALUE
 {{ value }}
 VALUE
-, 'Created Page: {{ name }}');
+, 'Created Page: {{ post_name }}');
+
