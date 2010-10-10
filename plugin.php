@@ -240,8 +240,10 @@ if (!class_exists("SitePlugin")) {
 //                break;
 			case 'apply':
                 $upgrade = $_SESSION['upgrade'];
-                $upgrade->execute();
-                $this->bump_version();
+                if ( $upgrade->execute() === true) {
+                    $this->bump_version();
+                }
+                unset($_SESSION['upgrade']);
                 break;
 			default:
                 wp_die($_GET['action'] . ' is not a valid action.');

@@ -1,0 +1,11 @@
+<h5>{{title}}</h5>
+<ul id="create-menus">
+{% for menu in menus %}
+	<li>
+		<label for="create_menu_{{ menu.slug }}">
+			<input type="checkbox" name="create-menus[]" id="create_menu_{{ menu.slug }}" value="{{ menu.slug }}" />
+			{{ menu.name }}
+		</label>
+	</li>
+{% endfor %}
+</ul>

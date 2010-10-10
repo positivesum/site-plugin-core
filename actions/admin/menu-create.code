@@ -1,0 +1,9 @@
+# Create Menu: {{ slug }}
+$upgrade->verify('menu_not_exists', <<<SLUG
+{{ slug_array }}
+SLUG
+) && $upgrade->add('menu_create', <<<VALUE
+{{ value }}
+VALUE
+, 'Updated Post: {{ slug }}');
+

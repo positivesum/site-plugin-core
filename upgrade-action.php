@@ -9,8 +9,8 @@ if ( !class_exists('SiteUpgradeAction') ) {
 	class SiteUpgradeAction {
 		
 		var $functions = array();
-		
-		function __construct($template_path=null) {
+
+        function __construct($template_path=null) {
 			
 			$template_path = is_null($template_path) ? dirname(__FILE__).'/actions/admin/' : $template_path;
 			
@@ -29,9 +29,7 @@ if ( !class_exists('SiteUpgradeAction') ) {
 			$loader = new H2o_File_Loader($template_path);
 			$this->h2o = new H2o(NULL, array('context'=>&$this, 'loader'=>$loader));
 			$this->h2o->addFilter('WordpressFilters');
-			
 		}
-		
 		/*
 		 * Register an instance of this class with the upgrade
 		 * @param $upgrade instance of SiteUpgrade
@@ -86,7 +84,7 @@ if ( !class_exists('SiteUpgradeAction') ) {
          * Strings are wrapped into an array, because Spyc unserializes everything into arrays.
          * This way, we can distinguish this string from an array and convert it to string instead of array.
          * @static
-         * @param  $value to be serialized
+         * @param  $value array
          * @return string of yaml
          */
         public static function serialize( $value ) {
@@ -106,9 +104,18 @@ if ( !class_exists('SiteUpgradeAction') ) {
             return Spyc::YAMLLoad( $yaml );
 
         }
-		
+        /**
+         * Return ID using $post_name
+         * @param  $post_name
+         * @return null|string
+         */
+        function get_id_by_post_name($post_name)
+        {
+            global $wpdb;
+            $id = $wpdb->get_var("SELECT ID FROM $wpdb->posts WHERE post_name = '$post_name'");
+            return $id;
+        }
 	}
-	
 }
 
 ?>

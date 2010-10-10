@@ -180,17 +180,6 @@ if ( !class_exists('SiteUpgradePageActions') ) {
             return $code;
 
 		}
-        /**
-         * Return ID using $post_name
-         * @param  $post_name
-         * @return null|string
-         */
-        function get_id_by_post_name($post_name)
-        {
-            global $wpdb;
-            $id = $wpdb->get_var("SELECT ID FROM $wpdb->posts WHERE post_name = '$post_name'");
-            return $id;
-        }
 	}
 
 	new SiteUpgradePageActions();
