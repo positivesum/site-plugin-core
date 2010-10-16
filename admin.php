@@ -63,6 +63,10 @@ if ( !class_exists('SitePluginAdmin') ) {
 
 			$created = FALSE;
 			$error = FALSE;
+            $name = '';
+            $plugin_file = '';
+            $activation_url = '';
+            
 			$messages =& $this->messages;
 			if ( array_key_exists('name', $_POST ) ) {
 				if ( $name = $_POST['name'] ) {
@@ -71,8 +75,8 @@ if ( !class_exists('SitePluginAdmin') ) {
 						$created = TRUE;
 						$plugin = $result;
 						$plugin_file = "$plugin/plugin.php";
-						# TODO: generate url that will activate the plugin
-						$activation_url = bloginfo('url')."/wp-admin/plugins.php"; 
+                        $nonce= wp_create_nonce('activate-plugin_'.$plugin_file);
+						$activation_url = get_bloginfo('wpurl')."/wp-admin/plugins.php?action=activate&plugin=$plugin_file&_wpnonce=$nonce";
 					}
 				} else {
 					$error = TRUE;
