@@ -8,33 +8,49 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
         function menu_not_exists($slug) {
             return !$this->menu_exists($slug);
         }
-        function menu_create() {
-
+        function menu_create($args) {
         }
+        /**
+         * deletes the menu with given slug
+         * creates a new menu
+         * add menu items to it
+         * set its location
+         * 
+         * @param  $args
+         * @return WP_Error
+         */
         function menu_update($args) {
+
             if (!array_key_exists('slug', $args)) {
                 return new WP_Error('error', __('slug is not specified'));
             }
             if (is_nav_menu($args['slug'])) {// navigation menu exists
-                $menu_object = wp_get_nav_menu_object($args['slug']);
+//                $menu_object = wp_get_nav_menu_object($args['slug']);
                 $new_menu = array(
                     'description' => $args['description'],
                     'menu-name'   => $args['name'],
                     'parent'      => $args['parent'],
                     'slug'        => $args['slug'],
                 );
-                if (wp_delete_nav_menu($args['slug'])) {
-                    $menu_id = wp_update_nav_menu_object(0, $new_menu);// create_nav_menu uses only 'menu-name' 
-                    if (is_numeric($menu_id)) {
+                $locations = get_theme_mod( 'nav_menu_locations');
+                if (wp_delete_nav_menu($args['slug'])) {// delete nav menu
+                    $menu_id = wp_update_nav_menu_object(0, $new_menu);// create_nav_menu() uses only 'menu-name', therefore we have to use this
+                    foreach ($args['nav_menu_locations'] as $index => $menu_location) {
+                        $locations[$menu_location] = $menu_id;// set this nav menu to all the locations
+                    }
+                    set_theme_mod( 'nav_menu_locations', $locations);
+
+                    if (is_numeric($menu_id)) {// successfully created
                         $menu_items = $args['menu_items'];
+
                         foreach ($menu_items as $menu_item) {
                             switch ($menu_item['object']):
                                 case 'page':
-                                    $nav_menu_item_post_id = $this->nav_menu_item_post_id($menu_item['slug']);// If nothing is found then, this item will be added. The previous one will not be removed
+                                    $nav_menu_item_post_id = $this->nav_menu_item_post_id($menu_item['slug']);// If nothing is found, this item will be added. The previous one will not be removed
                                     $post = get_post($this->get_id_by_post_name($menu_item['slug']));
                                     $menu_item_data = array(
                                         'menu-item-db-id' => $nav_menu_item_post_id,
-                                        'menu-item-object-id' => $post->ID,
+                                        'menu-item-object-id' => $post->ID,// the id if the original item being referred to
                                         'menu-item-object' => $menu_item['object'],
                                         'menu-item-parent-id' => $menu_item['menu_item_parent'],// TODO this is not correct
                                         'menu-item-position' => $menu_item['menu_order'],
@@ -51,6 +67,34 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                                     $menu_item_db_id = wp_update_nav_menu_item($menu_id, $nav_menu_item_post_id, $menu_item_data);
                                     break;
                                 case 'category':
+                                    $cat = get_category_by_slug($menu_item['slug']);
+                                    // assumption: the category upgrade script has already been executed and all categories exist
+                                    // nav menu item for the parent category has already been created
+                                    // create nav menu item for current entry
+                                    if ($menu_item['menu_item_parent']) {
+                                        $cat_parent = get_category_by_slug($menu_item['menu_item_parent']);
+                                        $id = $cat_parent->term_id;// or cat_ID
+                                        $ass_nav_menu_items = wp_get_associated_nav_menu_items($id, 'taxonomy');
+                                        $menu_item['menu_item_parent'] = $ass_nav_menu_items[0]; // TODO what if more than one associated nav menu items are found
+                                    }
+                                    // else this menu item has no parent, create it directly
+                                    $menu_item_data = array(
+                                        'menu-item-db-id' => $nav_menu_item_post_id,
+                                        'menu-item-object-id' => $cat->term_id,// the id if the original item being referred to
+                                        'menu-item-object' => $menu_item['object'],
+                                        'menu-item-parent-id' => $menu_item['menu_item_parent'],
+                                        'menu-item-position' => $menu_item['menu_order'],
+                                        'menu-item-type' => $menu_item['type'],
+                                        'menu-item-title' => $menu_item['title'],
+                                        'menu-item-url' => $menu_item['url'],// TODO this is not correct
+                                        'menu-item-description' => $menu_item['description'],
+                                        'menu-item-attr-title' => $menu_item['attr_title'],
+                                        'menu-item-target' => $menu_item['target'],
+                                        'menu-item-classes' => $menu_item['classes'],
+                                        'menu-item-xfn' => $menu_item['xfn'],
+                                        'menu-item-status' => $menu_item['post_status'],
+                                    );
+                                    wp_update_nav_menu_item($menu_id, 0, $menu_item_data);
                                     break;
                                 case 'custom':
                                     break;
@@ -60,36 +104,6 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                     }
                 }
             }
-
-//            if (! is_wp_error( wp_delete_nav_menu($args['slug'])) ) {
-//                $new_nav_menu = wp_create_nav_menu($args['slug']);
-//                if (! is_wp_error($new_nav_menu)) {
-//                    $new_nav_menu = wp_get_nav_menu_object($new_nav_menu);
-//                    $menu_items = $args['menu_items'];
-//                    foreach ($menu_items as $menu_item) {
-//                        $menu_item_data = array(
-//                            'menu-item-db-id' => $menu_item['db_id'],
-//                            'menu-item-object-id' => $menu_item['object_id'],
-//                            'menu-item-object' => $menu_item['object'],
-//                            'menu-item-parent-id' => $menu_item['menu_item_parent'],
-//                            'menu-item-position' => $menu_item['menu_order'],
-//                            'menu-item-type' => $menu_item['type'],
-//                            'menu-item-title' => $menu_item['title'],
-//                            'menu-item-url' => $menu_item['url'],
-//                            'menu-item-description' => $menu_item['description'],
-//                            'menu-item-attr-title' => $menu_item['attr_title'],
-//                            'menu-item-target' => $menu_item['target'],
-//                            'menu-item-classes' => $menu_item['classes'],
-//                            'menu-item-xfn' => $menu_item['xfn'],
-//                            'menu-item-status' => $menu_item['post_status'],
-//                        );
-//                        wp_update_nav_menu_item($new_nav_menu->term_id, 0, $menu_item_data);
-//                    }
-//                }
-//            } else {
-//                echo 'error while deleting nav_menu';
-//            }
-
         }
         function menu_item_create() {
 
@@ -100,6 +114,12 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
         function menu_delete() {
             
         }
+        /**
+         * generates menu create/update scripts
+         * 
+         * @param  $code
+         * @return
+         */
         function generate($code) {
             if (array_key_exists('update-menus', $_POST) && $menus = $_POST['update-menus']) {
                 $code .= $this->menus_code ('update-menus', $menus);
@@ -119,6 +139,10 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                 case 'category':
                     $category = get_category($menu_item->object_id);
                     $slug = $category->slug;
+                    if ($menu_item->post_parent != 0) {
+                        $parent_category = get_category($menu_item->post_parent);
+                        $menu_item->post_parent = $parent_category->slug;
+                    }
                     break;
                 case 'page':
                     $post = get_post($menu_item->object_id);
@@ -134,7 +158,7 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                 'slug'              => $slug,   // this is enough to identify a post/category on the production site
                 'menu_order'        => $menu_item->menu_order,
                 'post_type'         => $menu_item->post_type,
-                'menu_item_parent'  => $menu_item->menu_item_parent,
+                'menu_item_parent'  => $menu_item->post_parent,
                 'object'            => $menu_item->object,
                 'type'              => $menu_item->type,
                 'type_label'        => $menu_item->type_label,
@@ -154,7 +178,7 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
          * @param  $menu_slugs
          * @return string
          */
-        function menus_code($type, $menu_slugs) {
+        protected function menus_code($type, $menu_slugs) {
             $code = '';
             switch ($type):
                 case 'update-menus':
@@ -170,10 +194,10 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
             // foreach menu
             foreach ($menu_slugs as $menu_slug ) {
                 $menu_obj   = wp_get_nav_menu_object($menu_slug);
-                $menu_items = wp_get_nav_menu_items ($menu_slug);
+                $locations = get_nav_menu_locations();
+                $menu_obj->nav_menu_locations = array_keys($locations);// TODO what if this menu is being displayed more than one place
 
-//                $locations = get_nav_menu_locations(); TODO 
-//                $menu_obj->theme_location = key($locations);
+                $menu_items = wp_get_nav_menu_items ($menu_slug);
                 // foreach menu item in menu
                 foreach ($menu_items as $menu_item) {
                     $menu_obj->menu_items[] = $this->get_menu_items_export($menu_item);
@@ -188,7 +212,7 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
          * @param  $title
          * @return
          */
-        function get_checkbox_list($title) {
+        protected function get_checkbox_list($title) {
             switch ($title):
                 case 'Create Menus':
                     $this->h2o->loadTemplate('menus-create.html');
@@ -202,6 +226,7 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
             return $this->h2o->render(array('menus'=>$menus, 'title'=>$title));
         }
         /**
+         * Shows lists of menus in admin for the generation of create/update script
          * @param  $elements
          * @return
          */
