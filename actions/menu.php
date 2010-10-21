@@ -97,6 +97,23 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                                     wp_update_nav_menu_item($menu_id, 0, $menu_item_data);
                                     break;
                                 case 'custom':
+                                    $menu_item_data = array(
+                                        'menu-item-db-id' => null,
+                                        'menu-item-object-id' => null,// the id if the original item being referred to
+                                        'menu-item-object' => $menu_item['object'],
+                                        'menu-item-parent-id' => $this->get_id_by_post_name($menu_item['menu_item_parent']),
+                                        'menu-item-position' => $menu_item['menu_order'],
+                                        'menu-item-type' => $menu_item['type'],
+                                        'menu-item-title' => $menu_item['title'],
+                                        'menu-item-url' => $menu_item['url'],// TODO this is not correct
+                                        'menu-item-description' => $menu_item['description'],
+                                        'menu-item-attr-title' => $menu_item['attr_title'],
+                                        'menu-item-target' => $menu_item['target'],
+                                        'menu-item-classes' => $menu_item['classes'],
+                                        'menu-item-xfn' => $menu_item['xfn'],
+                                        'menu-item-status' => $menu_item['post_status'],
+                                    );
+                                    $menu_item_db_id = wp_update_nav_menu_item($menu_id, $nav_menu_item_post_id, $menu_item_data);
                                     break;
                                 default:
                             endswitch;
@@ -150,6 +167,11 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                     break;
                 case 'custom':
                     $slug = $menu_item->post_name;
+                    if ($menu_item->menu_item_parent != '0') {
+                        $parent_custom = get_post($menu_item->menu_item_parent);
+                        $menu_item->post_parent = $parent_custom->post_name;
+                    }
+//                    $menu_item->post_parent = get_post();
                     break;
                 default:
             endswitch;
