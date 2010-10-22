@@ -46,13 +46,15 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                         foreach ($menu_items as $menu_item) {
                             switch ($menu_item['object']):
                                 case 'page':
-                                    $nav_menu_item_post_id = $this->nav_menu_item_post_id($menu_item['slug']);// If nothing is found, this item will be added. The previous one will not be removed
+                                    $nav_menu_item_post_id = $this->get_nav_menu_item_post_id($menu_item['slug']);// If nothing is found, this item will be added. The previous one will not be removed
                                     $post = get_post($this->get_id_by_post_name($menu_item['slug']));
+                                    $parent_post = get_post($this->get_id_by_post_name($menu_item['menu_item_parent']));
+                                    $parent_menu_item = wp_get_associated_nav_menu_items($parent_post->ID, 'post_type');
                                     $menu_item_data = array(
                                         'menu-item-db-id' => $nav_menu_item_post_id,
                                         'menu-item-object-id' => $post->ID,// the id if the original item being referred to
                                         'menu-item-object' => $menu_item['object'],
-                                        'menu-item-parent-id' => $menu_item['menu_item_parent'],// TODO this is not correct
+                                        'menu-item-parent-id' => $parent_menu_item[0],// TODO this is not correct
                                         'menu-item-position' => $menu_item['menu_order'],
                                         'menu-item-type' => $menu_item['type'],
                                         'menu-item-title' => $menu_item['title'],
@@ -162,8 +164,13 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
                     }
                     break;
                 case 'page':
-                    $post = get_post($menu_item->object_id);
+                    $post = get_post($menu_item->object_id);// original object being referred to
                     $slug = $post->post_name;
+                    if ($menu_item->menu_item_parent != '0') {
+                        $original_parent_id = get_post_meta($menu_item->menu_item_parent, '_menu_item_object_id', true);
+                        $original_parent_object = get_post($original_parent_id);
+                        $menu_item->post_parent = $original_parent_object->post_name;
+                    }
                     break;
                 case 'custom':
                     $slug = $menu_item->post_name;
@@ -261,7 +268,7 @@ if ( !class_exists('SiteUpgradeMenuActions') ) {
          * @param  $post_name
          * @return null|string
          */
-        function nav_menu_item_post_id($post_name)
+        function get_nav_menu_item_post_id($post_name)
         {
             global $wpdb;
             $id = $wpdb->get_var("SELECT MAX( b.post_id )
