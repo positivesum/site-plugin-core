@@ -61,7 +61,11 @@ if ( !class_exists('SiteUpgradePageActions') ) {
                 return new WP_Error('error', __('post_name is not specified'));
             }
 
-            if (wp_update_post($args) === 0) {
+            $post_id = $this->get_id_by_post_name($args['post_name']);
+            $args['ID'] = $post_id; 
+
+            $post_id = wp_update_post($args);
+            if ($post_id == 0) {
                 return new WP_Error('error', __('Error occured while updating page'));
             }
             return true;
@@ -77,15 +81,15 @@ if ( !class_exists('SiteUpgradePageActions') ) {
             }
             unset($args['ID']); // to avoid updating a post with the given ID
 
-            $page_id = $this->get_id_by_post_name($args['post_name']);
+            $post_id = $this->get_id_by_post_name($args['post_name']);
 
-            $prev_page = get_page( $page_id, ARRAY_A );
+            $existing_post = get_page( $post_id, ARRAY_A );
 
-            if ($prev_page && $prev_page['post_status'] === 'trash')
+            if ($existing_post && $existing_post['post_status'] === 'trash')
             {
-                wp_delete_post($page_id, true);// if a post already exists in trash then post_name will identify that post and post we created will be assigned a new post name
+                wp_delete_post($post_id, true);// if a post already exists in trash then post_name will identify that post and post we created will be assigned a new post name
             }
-            else if ($prev_page)
+            else if ($existing_post)
             {
                 return new WP_Error('error', __('A page with the current post_name already exists. Please generate update script.'));
             }
@@ -114,7 +118,9 @@ if ( !class_exists('SiteUpgradePageActions') ) {
             endswitch;
 
             $pages = get_pages();
-            return $this->h2o->render(array('pages'=>$pages, 'title'=>$title));
+            $posts = get_posts();
+            $merged = array_merge($pages, $posts);
+            return $this->h2o->render(array('pages'=>$merged, 'title'=>$title));
 		}
 
         function admin( $elements ) {
