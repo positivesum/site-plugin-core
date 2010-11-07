@@ -22,7 +22,8 @@ if (!class_exists("SitePlugin")) {
 	
 			$this->name = $name;
 			$this->slug = sanitize_title($name);
-			$this->option_name = $this->slug.'_version';
+			$this->version_option = $this->slug.'_version';
+            $this->changelog_option = $this->slug.'_changelog';
 			
 			$this->path = WP_PLUGIN_DIR . '/' . $this->slug;			
 			
@@ -62,17 +63,18 @@ if (!class_exists("SitePlugin")) {
 		 * Creates version option for current plugin
 		 */
 		function create_version_option() {
-			if ( get_option($this->option_name, false) === false ) {
-				add_option($this->option_name, 0);
-			
+			if ( get_option($this->version_option, false) === false ) { // if option does not exist
+				add_option($this->version_option, 0);
 			}
+            update_option($this->changelog_option, array());
 		}
         /**
          * Deletes version option for current plugin
          * @return void
          */
         function delete_version_option() {
-			delete_option($this->option_name);
+			delete_option($this->version_option);
+            delete_option($this->changelog_option);
 		}
 		/*
 		 * Return the current active version of the plugin
@@ -80,7 +82,7 @@ if (!class_exists("SitePlugin")) {
 		 */
 		function get_current_version() {
 			
-			return get_option($this->option_name, 0 );
+			return get_option($this->version_option, 0 );
 			
 		}
 		
@@ -91,7 +93,7 @@ if (!class_exists("SitePlugin")) {
 		function bump_version() {
 			
 			$next = $this->get_current_version() + 1;
-			update_option($this->option_name, $next);
+			update_option($this->version_option, $next);
 			
 			return $next;
 			
@@ -119,7 +121,7 @@ if (!class_exists("SitePlugin")) {
 				}
 			}
 			ksort($versions);
-			if ( $applied ) { 
+			if ( $applied ) {
 				$versions = array_slice($versions, 0, $this->get_current_version()); 
 			}
 			return $versions;
@@ -240,9 +242,14 @@ if (!class_exists("SitePlugin")) {
 //                break;
 			case 'apply':
                 $upgrade = $_SESSION['upgrade'];
-                if ( $upgrade->execute() === true) {
+                if ( $upgrade->execute() === true) { // TODO or not an object of WP_ERROR
                     $this->bump_version();
                 }
+                $change_log = get_option($this->changelog_option);
+                if ($change_log === null OR $change_log === '')
+                    $change_log = array();
+                array_push($change_log, $upgrade -> changelog);
+                update_option($this->changelog_option, $change_log);
                 unset($_SESSION['upgrade']);
                 break;
 			default:
@@ -323,7 +330,7 @@ if (!class_exists("SitePlugin")) {
 		}
 		
 		function main_page() {
-			$this->verify_permissions(); 
+			$this->verify_permissions();
 			# TODO: load main page from template
             include('views/main.html');
 

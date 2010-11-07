@@ -5,5 +5,5 @@ SLUG
 ) && $upgrade->add('menu_update', <<<VALUE
 {{ value }}
 VALUE
-, 'Updated Post: {{ slug }}');
+, 'Updated Menu: {{ slug }}');
 

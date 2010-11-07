@@ -112,7 +112,7 @@ if ( !class_exists('SiteUpgradeAction') ) {
         function get_id_by_post_name($post_name)
         {
             global $wpdb;
-            $id = $wpdb->get_var("SELECT ID FROM $wpdb->posts WHERE post_name = '$post_name'");
+            $id = $wpdb->get_var("SELECT ID FROM $wpdb->posts WHERE post_name = '$post_name'");// TODO what if more than one values are returned
             return $id;
         }
 	}

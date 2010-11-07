@@ -2,15 +2,28 @@
 	<h2><?php echo __($this->name), __(' Upgrade Log') ?></h2>
 	<p><?php echo __('Current Version: '), $this->get_current_version(); ?></p>
 	<h3><?php echo __('Changelog') ?></h3>
-	<ol>
-		<?php foreach ($versions = $this->get_versions(true) as $id=>$version ): ?>
-			<li>
-				<ul>
-					<?php foreach ( explode("\n", $version['changelog']) as $item ) : ?>
-						<li><?php echo $item; ?></li>
-					<?php endforeach; ?>
-				</ul>
-			</li>
-		<?php endforeach; ?>
-	</ol>
+	<!--<ol>-->
+		<!--<?php foreach ($versions = $this->get_versions(true) as $id=>$version ): ?>-->
+			<!--<li>-->
+				<!--<ul>-->
+					<!--<?php foreach ( explode("\n", $version['changelog']) as $item ) : ?>-->
+						<!--<li><?php echo $item; ?></li>-->
+					<!--<?php endforeach; ?>-->
+				<!--</ul>-->
+			<!--</li>-->
+		<!--<?php endforeach; ?>-->
+	<!--</ol>-->
+    <?php
+    $version_list = get_option($this->changelog_option);
+    $version_list = array_reverse($version_list, true);
+    $i = count($version_list);
+    foreach ($version_list as $version) {
+        echo '<h4>Version: ' . $i-- . '</h4>';
+        echo '<ol>';
+                foreach ($version as $log_entry) {
+                    echo '<li>' . $log_entry . '</li>';
+                }
+        echo '</ol>';
+    }
+    ?>
 </div>

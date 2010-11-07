@@ -15,6 +15,7 @@ include_once(dirname(__FILE__).'/actions/category.php');
 include_once(dirname(__FILE__).'/actions/option.php');
 include_once(dirname(__FILE__).'/actions/page.php');
 include_once(dirname(__FILE__).'/actions/theme.php');
+include_once(dirname(__FILE__).'/actions/menu.php');
 
 // include tests when test is being executed
 if ( defined('DIR_TESTPLUGINS') && DIR_TESTPLUGINS ) {

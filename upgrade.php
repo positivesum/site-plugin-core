@@ -3,10 +3,10 @@
 if ( !class_exists('SiteUpgrade') ) {
 	
 	class SiteUpgrade {
-		var $dryrun = false;
-		var $tasks = array(); # contains tasks that need to be executed during this upgrade
+		var $dryrun    = false;
+		var $tasks     = array(); # contains tasks that need to be executed during this upgrade
 		var $changelog = array(); # contains changelog for current upgrade
-		var $actions = array(); # contains all of the actions that this upgrade is aware of
+		var $actions   = array(); # contains all of the actions that this upgrade is aware of
 		
 		/*
 		 * @param $errors WP_Error instance for reporting errors
@@ -49,7 +49,7 @@ if ( !class_exists('SiteUpgrade') ) {
 			$arg = $this->get_arg_array($arg);
 			array_push($this->tasks, array($function, $arg, $msg ));
 			if ( $msg ) array_push($this->changelog, $msg);
-			return TRUE;
+			return true;
 
 		}
 		
@@ -58,7 +58,7 @@ if ( !class_exists('SiteUpgrade') ) {
 		 * @param boolean execute change in dryrun mode
 		 * @return TRUE or WP_Error
 		 */
-		function execute( $dryrun = FALSE ) {
+		function execute( $dryrun = false ) {
 			
 			do_action('site_plugin_before_upgrade');
 			$errors = array();
@@ -97,7 +97,7 @@ if ( !class_exists('SiteUpgrade') ) {
 				return $this->messages;
 			}
 			
-			return TRUE;
+			return true;
 		}
 
 		/*
@@ -107,23 +107,23 @@ if ( !class_exists('SiteUpgrade') ) {
 		 * @return boolean result of assertion
 		 */
 		function verify($function, $arg ) {
-			switch ($this->dryrun):
-			case true:
-                if (array_key_exists($function, $this->actions) ) {
-                    $action = $this->actions[$function];
-                    $arg = $this->get_arg_array($arg);
-                    if (call_user_func($action, $arg)) {
-                        $this->messages->add('info', "$function returned true, the precondition has been verified.");
+			switch ($this->dryrun) {
+                case true:
+                    if (array_key_exists($function, $this->actions) ) {
+                        $action = $this->actions[$function];
+                        $arg = $this->get_arg_array($arg);
+                        if (call_user_func($action, $arg)) {
+                            $this->messages->add('info', "$function returned true, the precondition has been verified.");
+                        } else {
+                            $this->messages->add('info', "$function returned false, the precondition could not be verified.");
+                        }
                     } else {
-                        $this->messages->add('info', "$function returned false, the precondition could not be verified.");
+                        array_push($errors, __("Function is not defined: ") . $function);
                     }
-                } else {
-                    array_push($errors, __("Function is not defined: ") . $function);
-                }
-				return false;
-			case false:
-				return true;
-			endswitch;
+                    return false;
+                case false:
+                    return true;
+            }
             
 		}		
 	}
