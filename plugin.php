@@ -283,7 +283,7 @@ if (!class_exists("SitePlugin")) {
 			$previous = $this->last_version();
 			$version_dir = $this->versions . "$next/";
 			
-			if ( !mkdir($version_dir) ) return $this->errors->add('error', fsprint('Could not create version %s in %s', $next, $this->versions));
+			if ( !mkdir($version_dir) ) return $this->errors->add('error', sprintf('Could not create version %s in %s', $next, $this->versions));
 
 			$this->h2o->loadTemplate(WP_PLUGIN_DIR . '/site-plugin-core/templates/upgrade.php');
 			
