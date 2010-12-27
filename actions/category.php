@@ -15,10 +15,13 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
             if ( !array_key_exists('name', $args)) {
                  return new WP_Error('error', __('Category name is not specified'));
             }
-
+            $parent = get_category_by_slug($args['parent']);
+            $args['parent'] = $parent->cat_ID;
             $result = wp_insert_term($args['name'], 'category', $args);
-             if ( is_wp_error($result) ) return new WP_Error('error', __('Error occured while trying to insert category'));
-		 	 else return true;
+             if ( is_wp_error($result) )
+                 return new WP_Error('error', __('Error occured while trying to insert category'));
+		 	 else
+                  return true;
         }
         /*
 		 * Updates category to values specified in array
@@ -31,16 +34,17 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 		 	 	 return new WP_Error('error', __('Category id is not specified'));
 		 	 }
 		 	 
-		 	 $term_id = $args['cat_ID'];
 		 	 unset($args['cat_ID']);
+             $category = get_category_by_slug($args['slug']);
+             $parent = get_category_by_slug($args['parent']);
 		 	 
 		 	 $data = array();
 		 	 if ( array_key_exists('name', $args) ) $data['name'] = $args['name'];		 	 
 		 	 if ( array_key_exists('description', $args) ) $data['description'] = $args['description'];
-		 	 if ( array_key_exists('parent', $args) ) $data['parent'] = $args['parent'];
+		 	 if ( array_key_exists('parent', $args) ) $data['parent'] = $parent -> cat_ID;
 		 	 if ( array_key_exists('slug', $args) ) $data['slug'] = $args['slug'];
 		 	 
-		 	 $result = wp_update_term( $term_id, 'category', $data);
+		 	 $result = wp_update_term( $category->term_id, 'category', $data);
 		 	 
 		 	 if ( is_wp_error($result) ) return new WP_Error('error', __('Error occured while trying to update category'));
 		 	 else return true;
@@ -113,16 +117,20 @@ if ( !class_exists('SiteUpgradeCategoryActions') ) {
 			endswitch;
 				
 			foreach ( $cat_ids as $cat_id ) {
-				$c = get_category($cat_id, ARRAY_A);
+				$category = get_category($cat_id, ARRAY_A);
+                if ($category['parent'] != '0')
+                    $parent = get_category($category['parent'], ARRAY_A);
+                else
+                    $parent['slug'] = '0';
 				$data = array(
-					'cat_ID'=>$c['cat_ID'],
-					'name'=>$c['name'], 'description'=>$c['description'], 
-					'parent'=>$c['parent'], 'slug'=>$c['slug']
+					'cat_ID'=>$category['cat_ID'],
+					'name'=>$category['name'], 'description'=>$category['description'],
+					'parent'=>$parent['slug'], 'slug'=>$category['slug']
 					);
 				$value = $this->serialize($data);
-                $id = $this->serialize(array($c['cat_ID']));
-                $slug = $this->serialize(array($c['slug']));
-				$code .= $this->h2o->render(array('id'=>$id, 'name'=>$c['name'], 'value'=>$value, 'slug'=>$slug));
+                $id = $this->serialize(array($category['cat_ID']));
+                $slug = $this->serialize(array($category['slug']));
+				$code .= $this->h2o->render(array('id'=>$id, 'name'=>$category['name'], 'value'=>$value, 'slug'=>$slug));
 			}
 			
 			return $code;

@@ -12,7 +12,7 @@
 		
 		$this->execute($id);
 	?>
-		<p><?php echo __('Execution complete!')?></p>
+		<!--<p><?php echo __('Execution complete!')?></p>-->
 	<?php endif; ?>
 	
 	<h2><?php echo __('Available Upgrades')?></h2>
@@ -56,7 +56,11 @@
 						<!--<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=after") ?>"><?php echo __('Execute') ?></a>-->
 					<!--</td>-->
                     <td class="apply-upgrade">
+                        <?php if ( $_SESSION['upgrade'] ) : ?>
 						<a href="<?php echo esc_url($_SERVER['REQUEST_URI']."&amp;execute=$id&amp;action=apply") ?>"><?php echo __('Execute') ?></a>
+                        <?php else: ?>
+                            Execute
+                        <?php endif; ?>
 					</td>
 					<?php else: ?>
 						<td class="unavailable" colspan="3">
@@ -67,4 +71,14 @@
 			<?php endforeach; ?>
 		</tbody>
 	</table>		
+    <h2>Messages</h2>
+    <ol>
+    <?php
+        foreach ($this->errors->errors['info'] as $err) {
+    ?>
+            <li><?php echo $err; ?></li>
+    <?php
+        }
+    ?>
+    </ol>
 </div>

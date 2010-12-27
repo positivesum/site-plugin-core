@@ -49,6 +49,7 @@ if ( !class_exists('SiteUpgrade') ) {
 			$arg = $this->get_arg_array($arg);
 			array_push($this->tasks, array($function, $arg, $msg ));
 			if ( $msg ) array_push($this->changelog, $msg);
+            $this->messages->add('info', "The upgrade statement has been queued. Function: $function");
 			return true;
 
 		}
@@ -112,11 +113,9 @@ if ( !class_exists('SiteUpgrade') ) {
                     if (array_key_exists($function, $this->actions) ) {
                         $action = $this->actions[$function];
                         $arg = $this->get_arg_array($arg);
-                        if (call_user_func($action, $arg)) {
-                            $this->messages->add('info', "$function returned true, the precondition has been verified.");
-                        } else {
-                            $this->messages->add('info', "$function returned false, the precondition could not be verified.");
-                        }
+                        $result = call_user_func($action, $arg);
+                        $result = $result == '' ? 'false' : 'true';
+                        $this->messages->add('info', "Function: $function, Arguments: $arg[0], Return value:  $result");
                     } else {
                         array_push($errors, __("Function is not defined: ") . $function);
                     }

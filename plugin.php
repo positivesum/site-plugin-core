@@ -242,7 +242,8 @@ if (!class_exists("SitePlugin")) {
 //                break;
 			case 'apply':
                 $upgrade = $_SESSION['upgrade'];
-                if ( $upgrade->execute() === true) { // TODO or not an object of WP_ERROR
+                $result = $upgrade->execute();
+                if ( $result && !is_wp_error($result)) { // TODO or not an object of WP_ERROR
                     $this->bump_version();
                 }
                 $change_log = get_option($this->changelog_option);
