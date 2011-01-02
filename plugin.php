@@ -271,6 +271,7 @@ if (!class_exists("SitePlugin")) {
 				add_submenu_page($menu_slug, __('Available Upgrades'), __('Upgrade'), 'manage_options', $menu_slug.'-upgrade', array(&$this, 'upgrade_page') );				
 			}
 			add_submenu_page($menu_slug, __('Create Upgrade'), __('Create Upgrade'), 'manage_options', $menu_slug.'-create-upgrade', array(&$this, 'create_upgrade_page') );
+			add_submenu_page($menu_slug, __('Create Upgrade'), __('Run Tests'), 'manage_options', $menu_slug.'-run-tests', array(&$this, 'run_tests_page') ); // Alexander
 		}
 
 		/*
@@ -297,6 +298,33 @@ if (!class_exists("SitePlugin")) {
 			fclose($output_file);
 			
 			return $next;
+		}
+
+		/*
+		 * This page shows information about tests results.
+		 */
+		function run_tests_page() { 
+			$this->verify_permissions(); 
+
+			$pluginDir		= basename(dirname(__FILE__));
+			$pluginPath		= WP_PLUGIN_DIR . '/' . $pluginDir;
+			$pluginUrl 		= WP_PLUGIN_URL.'/'.$pluginDir;					
+			
+			$url = $pluginUrl . '/phprack.php';
+			if( $curl = curl_init($url) ){
+				// 
+				curl_setopt($curl, CURLOPT_URL,$url);						
+				curl_setopt($curl, CURLOPT_FAILONERROR, 1); 
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);// allow redirects  			
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER,1); // return into a variable  			
+				curl_setopt($curl, CURLOPT_POST, 1); // set POST method  			
+				$data = array ('plugin_dir' => $pluginPath.'/rack-tests');				
+				curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+				$out = curl_exec($curl);
+				curl_close($curl);
+				echo $out;
+			}	
+
 		}
 		
 		/*
