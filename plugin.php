@@ -10,7 +10,7 @@ Author URI: http://taras.cc
 
 include_once(dirname(__FILE__).'/lib.php');
 include_once(dirname(__FILE__).'/upgrade.php');
-session_start();
+#session_start();
 # display Site Plugin Admin interface
 if ( is_admin() ) include_once(dirname(__FILE__).'/admin.php');
 
