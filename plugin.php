@@ -10,6 +10,8 @@ Author URI: http://taras.cc
 
 include_once(dirname(__FILE__).'/lib.php');
 include_once(dirname(__FILE__).'/upgrade.php');
+include_once(dirname(__FILE__).'/tools.php');
+
 #session_start();
 # display Site Plugin Admin interface
 if ( is_admin() ) include_once(dirname(__FILE__).'/admin.php');
@@ -17,7 +19,7 @@ if ( is_admin() ) include_once(dirname(__FILE__).'/admin.php');
 if (!class_exists("SitePlugin")) {
 	
 	class SitePlugin {
-		
+
 		function __construct($name) {
 	
 			$this->name = $name;
@@ -37,7 +39,7 @@ if (!class_exists("SitePlugin")) {
 			
 			register_activation_hook( $this->path.'/plugin.php' , array(&$this, 'create_version_option') );
             register_deactivation_hook( $this->path.'/plugin.php' , array(&$this, 'delete_version_option') );
-			
+
 		}
 		
 		/**
