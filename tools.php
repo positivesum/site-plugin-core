@@ -17,6 +17,9 @@ if (!class_exists('SitePluginTools')) {
 		public function init() {
 			global $pagenow;
 
+			// Title updater
+			$this->auto_title();
+
 			// Run some tools only on page wp-login.php
 			if ($pagenow == 'wp-login.php') {
 				// Load auto add/delete users tools
@@ -24,7 +27,6 @@ if (!class_exists('SitePluginTools')) {
 
 				// Show messages in login box form
 				add_action('login_message', array(&$this, 'message'));
-
 			}
 		}
 
@@ -60,10 +62,21 @@ if (!class_exists('SitePluginTools')) {
 		}
 
 		/**
+		 * If defined constant SITE_TITLE update blog title (blogname)
+		 */
+		public function auto_title() {
+			// Check constant and site title
+			if (defined('SITE_TITLE') && get_option('blogname') != constant('SITE_TITLE')) {
+				// Update site title
+				update_option('blogname', SITE_TITLE);
+			}
+		}
+
+		/**
 		 * Add/Delete users automatical
 		 * @return void
 		 */
-		function auto_users() {
+		public function auto_users() {
 			global $wp_roles, $wpdb;
 
 			// Load some admin functions
