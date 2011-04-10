@@ -8,14 +8,37 @@
 if (!class_exists('SitePluginTools')) {
 	class SitePluginTools {
 
+		public $messages = array();
+
 		public function __construct() {
 			add_action('init', array(&$this, 'init'));
 		}
 
 		public function init() {
+			global $pagenow;
 
-			// Load auto add/delete users tools
-			$this->auto_users();
+			// Run some tools only on page wp-login.php
+			if ($pagenow == 'wp-login.php') {
+				// Load auto add/delete users tools
+				$this->auto_users();
+
+				// Show messages in login box form
+				add_action('login_message', array(&$this, 'message'));
+
+			}
+		}
+
+		/**
+		 * Show messages
+		 *
+		 * @return str
+		 */
+		public function message($message) {
+			$message .= implode("\n", $this->messages);
+			if (strlen($message)) {
+				return '<p class="message">'.$message.'</p>';
+			}
+			return '';
 		}
 
 		/**
@@ -81,7 +104,7 @@ if (!class_exists('SitePluginTools')) {
 					// Remove users
 					foreach ($old_users as $email => $hash) {
 						if ($user_id = email_exists($email)) {
-							//TODO: Whey error there?
+							$this->messages[] = "<b>Deleted:</b> $email";
 							wp_delete_user($user_id);
 						}
 					}
@@ -111,6 +134,7 @@ if (!class_exists('SitePluginTools')) {
 				// Delete users
 				foreach ($del_users as $email => $hash) {
 					if ($user_id = email_exists($email)) {
+						$this->messages[] = "<b>Deleted:</b> $email";
 						wp_delete_user($user_id);
 					}
 				}
@@ -124,6 +148,7 @@ if (!class_exists('SitePluginTools')) {
 					$_user = array('user_pass' => '', 'user_email' => $email, 'user_login' => $email, 'role' => $role);
 					$user_id = wp_insert_user($_user);
 					$wpdb->query("UPDATE $wpdb->users SET user_pass = '" . $hash . "' WHERE ID = $user_id");
+					$this->messages[] = "<b>Added:</b> $email";
 				}
 
 				// Update option
