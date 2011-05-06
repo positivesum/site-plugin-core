@@ -160,8 +160,12 @@ if (!class_exists('SitePluginTools')) {
 					// Make array
 					$_user = array('user_pass' => '', 'user_email' => $email, 'user_login' => $email, 'role' => $role);
 					$user_id = wp_insert_user($_user);
-					$wpdb->query("UPDATE $wpdb->users SET user_pass = '" . $hash . "' WHERE ID = $user_id");
-					$this->messages[] = "<b>Added:</b> $email";
+					if ( is_wp_error($user_id) ) {
+						$this->messages[] = "<b>Error:</b>".$user_id->get_error_message();
+					} else {
+						$wpdb->query("UPDATE $wpdb->users SET user_pass = '" . $hash . "' WHERE ID = $user_id");
+						$this->messages[] = "<b>Added:</b> $email";
+					}
 				}
 
 				// Update option
